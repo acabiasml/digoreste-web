@@ -44,10 +44,17 @@
                         </div>
 
                         <button class="btn btn-danger" id="pular" style="font-size:large;">Pular</button>
+                        <div id="dicamostra"><button class="btn btn-primary" id="dica" style="font-size:large;">Dica</button></div>
                     </form>
                     <script>
                         
+                        var listaPerguntas = [];
+                        var contador = 0;
+                        var apresentadas = 0;
+                        var dica = "";
+                        
                         function pergunta(){
+                            $("#dicamostra").hide();
                             $.ajax({
                                     dataType: "json",
                                     url: "consultas/pergunta.php",
@@ -59,18 +66,37 @@
                                         ;
                                         $("#clicaveis").html("");
                                         $.each(result.mensagem, function (i, item) {
-                                            $("#pergunta").html(item.descricao);
-                                            
-                                            $.each(item.opcoes, function (j, jitem) {
-                                                $("#clicaveis").append("<div class='col-md-6' style='margin-bottom: 20px'><a href='#' id='"+jitem.correta+"' class='w3-button w3-block w3-teal resposta' style='white-space: normal;font-size:larger;'>"+jitem.descricao+"</a></div>");
-                                            });
+                                            if($.inArray(item.id, listaPerguntas) !== -1){
+                                                contador = contador + 1;
+                                                if(contador >= 3){
+                                                    listaPerguntas = []; //começa poder repetir
+                                                    contador = 0;
+                                                }
+                                                pergunta();
+                                            }else{
+                                                if(contador > 0){
+                                                    contador = contador - 1;
+                                                }
+                                                listaPerguntas.push(item.id);
+                                                $("#pergunta").html(item.descricao);
+                                                
+                                                if(item.dica !== ""){
+                                                    $("#dicamostra").show();
+                                                }
+                                                
+                                                dica = item.dica;
+                                                
+                                                $.each(item.opcoes, function (j, jitem) {
+                                                    $("#clicaveis").append("<div class='col-md-6' style='margin-bottom: 20px'><a href='#' id='"+jitem.correta+"' class='w3-button w3-block w3-teal resposta' style='white-space: normal;font-size:larger;'>"+jitem.descricao+"</a></div>");
+                                                });
+                                            }
                                         });
                                     }
                                 });
                         }
                         
                         $(document).ready(function () {
-                            
+                                                        
                             pergunta();
                             
                             $("#salvar").submit(function(e) {
@@ -79,6 +105,14 @@
                             
                             $("#pular").click(function(){
                                 pergunta();
+                                var valor2 = $("#apresentadas").html();
+                                $("#apresentadas").html(parseInt(valor2) + 1);
+                                var valor4 = $("#pulos").html();
+                                $("#pulos").html(parseInt(valor4) + 1);
+                            });
+                            
+                            $("#dica").click(function(){
+                                alert(dica);
                             });
                             
                             $("body").on("click", "a.resposta", function(){                                
@@ -97,8 +131,15 @@
                                         'Eita',
                                         'Você errou :(',
                                         'error'
-                                    ).then(pergunta()); 
+                                    ).then(function(){
+                                        var valor3 = $("#erros").html();
+                                        $("#erros").html(parseInt(valor3) + 1);
+                                        pergunta();
+                                    }); 
                                 }
+                                
+                                var valor2 = $("#apresentadas").html();
+                                $("#apresentadas").html(parseInt(valor2) + 1);
                             });
                         });
                     </script>
@@ -106,7 +147,19 @@
                 </div>
                 <br/>
                 <div class="row" style="margin-left: 14px">
-                    <p style="font-weight: bolder; color: blue">Pontos: <span id="pontos" style="color:red">0</span></p>
+                    <p style="font-weight: bolder; color: blue">
+                        Apresentadas: <span id="apresentadas" style="color:orange">0</span>
+                        <span style="font-weight: bolder; color: blue">
+                            Acertos: <span id="pontos" style="color:green">0</span>
+                        </span>
+                        <span style="font-weight: bolder; color: blue">
+                            Erros: <span id="erros" style="color:red">0</span>
+                        </span>
+                        <span style="font-weight: bolder; color: blue">
+                            Pulos: <span id="pulos" style="color:orangered">0</span>
+                        </span>
+                    </p>
+                    
                 </div>
                 
             </section>
